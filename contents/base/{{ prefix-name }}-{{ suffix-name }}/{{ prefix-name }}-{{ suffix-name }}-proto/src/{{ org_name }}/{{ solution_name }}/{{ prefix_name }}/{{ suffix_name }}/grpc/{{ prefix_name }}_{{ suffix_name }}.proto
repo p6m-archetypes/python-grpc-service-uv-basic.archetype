@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package {{ org_name }}.{{ solution_name }}.{{ prefix_name }}_{{ suffix_name }}.grpc;
+
+// {{ PrefixName }} request for creating a {{ prefix-name }}
+message Create{{ PrefixName }}Request {
+  {{ PrefixName }} {{ prefix_name }} = 1;
+}
+
+// {{ PrefixName }} response for creating a {{ prefix-name }}
+message Create{{ PrefixName }}Response {
+  {{ PrefixName }} {{ prefix_name }} = 1;
+}
+
+// {{ PrefixName }} request for getting {{ prefix-name }}s
+message Get{{ PrefixName }}sRequest {
+  int32 start_page = 1;
+  int32 page_size = 2;
+}
+
+// {{ PrefixName }} response for getting {{ prefix-name }}s
+message Get{{ PrefixName }}sResponse {
+  repeated {{ PrefixName }} {{ prefix_name }}s = 1;
+  int32 total_count = 2;
+}
+
+// {{ PrefixName }} entity
+message {{ PrefixName }} {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  int64 created_at = 4;
+  int64 updated_at = 5;
+}
+
+// {{ PrefixName }} {{ suffix-name }} definition
+service {{ PrefixName }}{{ SuffixName }} {
+  // Create a new {{ prefix-name }}
+  rpc Create{{ PrefixName }}(Create{{ PrefixName }}Request) returns (Create{{ PrefixName }}Response);
+  
+  // Get {{ prefix-name }}s with pagination
+  rpc Get{{ PrefixName }}s(Get{{ PrefixName }}sRequest) returns (Get{{ PrefixName }}sResponse);
+}

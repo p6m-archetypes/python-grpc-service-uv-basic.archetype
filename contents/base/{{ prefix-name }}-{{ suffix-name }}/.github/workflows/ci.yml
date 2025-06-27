@@ -1,0 +1,305 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  PYTHON_VERSION: "3.11"
+  POETRY_VERSION: "1.7.1"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{'{'}}{ env.PYTHON_VERSION }
+      
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: ${{'{'}}{ env.POETRY_VERSION }
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{'{'}}{ runner.os }-${{'{'}}{ env.PYTHON_VERSION }-${{'{'}}{ hashFiles('**/poetry.lock') }
+      
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+      
+      - name: Install project
+        run: poetry install --no-interaction
+      
+      - name: Check code formatting with Black
+        run: |
+          cd example-service-api && poetry run black --check .
+          cd ../example-service-core && poetry run black --check .
+          cd ../example-service-persistence && poetry run black --check .
+          cd ../example-service-server && poetry run black --check .
+          cd ../example-service-client && poetry run black --check .
+      
+      - name: Check import sorting with isort
+        run: |
+          cd example-service-api && poetry run isort --check-only .
+          cd ../example-service-core && poetry run isort --check-only .
+          cd ../example-service-persistence && poetry run isort --check-only .
+          cd ../example-service-server && poetry run isort --check-only .
+          cd ../example-service-client && poetry run isort --check-only .
+      
+      - name: Lint with flake8
+        run: |
+          cd example-service-integration-tests
+          poetry run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          poetry run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+
+  type-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{'{'}}{ env.PYTHON_VERSION }
+      
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: ${{'{'}}{ env.POETRY_VERSION }
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{'{'}}{ runner.os }-${{'{'}}{ env.PYTHON_VERSION }-${{'{'}}{ hashFiles('**/poetry.lock') }
+      
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+      
+      - name: Install project
+        run: poetry install --no-interaction
+      
+      - name: Type check with mypy
+        run: |
+          cd example-service-api && poetry run mypy .
+          cd ../example-service-core && poetry run mypy .
+          cd ../example-service-persistence && poetry run mypy .
+          cd ../example-service-server && poetry run mypy .
+          cd ../example-service-client && poetry run mypy .
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{'{'}}{ env.PYTHON_VERSION }
+      
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: ${{'{'}}{ env.POETRY_VERSION }
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{'{'}}{ runner.os }-${{'{'}}{ env.PYTHON_VERSION }-${{'{'}}{ hashFiles('**/poetry.lock') }
+      
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: |
+          cd example-service-integration-tests
+          poetry install --no-interaction --no-root
+      
+      - name: Install project
+        run: |
+          cd example-service-integration-tests
+          poetry install --no-interaction
+      
+      - name: Run unit tests
+        run: |
+          cd example-service-integration-tests
+          poetry run pytest tests/unit/ -v --cov=tests --cov-report=xml --cov-report=term-missing
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./example-service-integration-tests/coverage.xml
+          flags: unit-tests
+          name: codecov-unit
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: example_service_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{'{'}}{ env.PYTHON_VERSION }
+      
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: ${{'{'}}{ env.POETRY_VERSION }
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{'{'}}{ runner.os }-${{'{'}}{ env.PYTHON_VERSION }-${{'{'}}{ hashFiles('**/poetry.lock') }
+      
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: |
+          cd example-service-integration-tests
+          poetry install --no-interaction --no-root
+      
+      - name: Install project
+        run: |
+          cd example-service-integration-tests
+          poetry install --no-interaction
+      
+      - name: Run integration tests
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/example_service_test
+        run: |
+          cd example-service-integration-tests
+          poetry run pytest tests/integration/ -v --cov=tests --cov-report=xml --cov-report=term-missing -m "not requires_docker"
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./example-service-integration-tests/coverage.xml
+          flags: integration-tests
+          name: codecov-integration
+
+  docker-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: example-service:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Test Docker image
+        run: |
+          # Test that the image can be built and runs basic health check
+          docker run --rm --detach --name example-service-test \
+            -p 9010:9010 -p 9011:9011 \
+            -e DATABASE_URL=sqlite:///tmp/test.db \
+            example-service:test
+          
+          # Wait for service to start
+          sleep 10
+          
+          # Test health endpoint
+          curl -f http://localhost:9011/health/live || exit 1
+          
+          # Cleanup
+          docker stop example-service-test
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  build-and-publish:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [lint, type-check, unit-tests, integration-tests, docker-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{'{'}}{ github.actor }
+          password: ${{'{'}}{ secrets.GITHUB_TOKEN }
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{'{'}}{ github.repository }
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{'{'}}{ branch }-
+            type=raw,value=latest,enable={{'{'}}{ is_default_branch }
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{'{'}}{ steps.meta.outputs.tags }
+          labels: ${{'{'}}{ steps.meta.outputs.labels }
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

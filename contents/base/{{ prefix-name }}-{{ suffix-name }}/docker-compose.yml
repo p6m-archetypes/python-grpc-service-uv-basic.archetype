@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  {{ prefix-name }}-{{ suffix-name }}:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: {{ prefix-name }}-{{ suffix-name }}
+    ports:
+      - "9010:9010"  # gRPC port
+      - "9011:9011"  # Management HTTP port
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/{{ prefix_name }}_{{ suffix_name }}
+      - LOGGING_LEVEL=INFO
+      - LOGGING_FORMAT=json
+      - GRPC_REFLECTION_ENABLED=true
+      - MANAGEMENT_ENABLED=true
+      - METRICS_ENABLED=true
+      - METRICS_PROMETHEUS_ENABLED=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9011/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - example-service-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: example-service-postgres
+    environment:
+      - POSTGRES_DB=example_service
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d example_service"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - example-service-network
+
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: example-service-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    depends_on:
+      - example-service
+    restart: unless-stopped
+    networks:
+      - example-service-network
+
+  grafana:
+    image: grafana/grafana:10.0.0
+    container_name: example-service-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - example-service-network
+
+volumes:
+  postgres_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  example-service-network:
+    driver: bridge

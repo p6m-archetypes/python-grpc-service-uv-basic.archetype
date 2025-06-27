@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "{{ prefix-name }}-{{ suffix-name }}-client"
+version = "0.1.0"
+description = "Client library for Example Service gRPC API"
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{include = "{{ org-name }}", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+grpcio = "^1.60.0"
+protobuf = "^4.25.0"
+pydantic = "^2.5.0"
+structlog = "^23.2.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-asyncio = "^0.21.0"
+pytest-mock = "^3.12.0"
+grpcio-testing = "^1.60.0"
+black = "^23.12.0"
+isort = "^5.13.0"
+mypy = "^1.8.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,159 @@
+[project]
+name = "{{ prefix-name }}-{{ suffix-name }}"
+version = "0.1.0"
+description = "Modular Python gRPC {{ suffix-name }} following enterprise patterns"
+authors = [{name = "Your Name", email = "you@example.com"}]
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+keywords = ["grpc", "microservice", "python", "async"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+dependencies = [
+    "grpcio>=1.60.0",
+    "grpcio-tools>=1.60.0",
+    "grpcio-reflection>=1.60.0",
+    "grpcio-health-checking>=1.60.0",
+    "protobuf>=4.25.0",
+    "sqlalchemy>=2.0.0",
+    "alembic>=1.13.0",
+    "psycopg2-binary>=2.9.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "structlog>=23.2.0",
+    "prometheus-client>=0.19.0",
+    "fastapi>=0.104.0",
+    "uvicorn>=0.24.0",
+    "click>=8.1.0",
+    "asyncpg>=0.29.0",
+    "asyncio>=3.4.3",
+    "pyjwt>=2.8.0",
+    "testcontainers>=4.10.0",
+    "opentelemetry-api>=1.20.0",
+    "opentelemetry-sdk>=1.20.0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.20.0",
+    "opentelemetry-instrumentation-grpc>=0.41b0",
+    "opentelemetry-instrumentation-sqlalchemy>=0.41b0",
+    "opentelemetry-instrumentation-asyncpg>=0.41b0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-mock>=3.12.0",
+    "pytest-cov>=4.1.0",
+    "testcontainers>=3.7.0",
+    "black>=23.12.0",
+    "isort>=5.13.0",
+    "flake8>=6.1.0",
+    "mypy>=1.8.0",
+    "pre-commit>=3.6.0",
+    "grpcio-testing>=1.60.0",
+]
+
+[project.scripts]
+{{ prefix-name }}-{{ suffix-name }}-server = "{{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.server.main:main"
+{{ prefix-name }}-{{ suffix-name }}-migrate = "{{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.server.migration:main"
+generate-grpc = "scripts.generate_grpc:main"
+benchmark = "scripts.benchmark:cli"
+
+[build-system]
+requires = ["hatchling", "grpcio-tools"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "{{ prefix-name }}-{{ suffix-name }}-proto/src/{{ org_name }}",
+    "{{ prefix-name }}-{{ suffix-name }}-api/src/{{ org_name }}",
+    "{{ prefix-name }}-{{ suffix-name }}-core/src/{{ org_name }}",
+    "{{ prefix-name }}-{{ suffix-name }}-persistence/src/{{ org_name }}",
+    "{{ prefix-name }}-{{ suffix-name }}-server/src/{{ org_name }}",
+    "{{ prefix-name }}-{{ suffix-name }}-client/src/{{ org_name }}",
+    "scripts",
+]
+include = [
+    "{{ prefix-name }}-{{ suffix-name }}-proto/src/**/*_pb2.py",
+    "{{ prefix-name }}-{{ suffix-name }}-proto/src/**/*_pb2_grpc.py",
+]
+
+[tool.hatch.build.hooks.custom]
+path = "build_hook.py"
+dependencies = ["grpcio-tools"]
+
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+line_length = 88
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers --cov={{ org-name }} --cov-report=term-missing --cov-report=html"
+testpaths = [
+    "{{ prefix-name }}-{{ suffix-name }}-api/tests",
+    "{{ prefix-name }}-{{ suffix-name }}-core/tests", 
+    "{{ prefix-name }}-{{ suffix-name }}-persistence/tests",
+    "{{ prefix-name }}-{{ suffix-name }}-server/tests",
+    "{{ prefix-name }}-{{ suffix-name }}-client/tests",
+    "{{ prefix-name }}-{{ suffix-name }}-integration-tests/tests"
+]
+markers = [
+    "unit: marks tests as unit tests",
+    "integration: marks tests as integration tests",
+    "slow: marks tests as slow running",
+]
+
+[tool.coverage.run]
+source = ["{{ org-name }}"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*_pb2.py",
+    "*_pb2_grpc.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
