@@ -1,38 +1,38 @@
-[tool.poetry]
+[project]
 name = "{{ prefix-name }}-{{ suffix-name }}-server"
 version = "0.1.0"
 description = "gRPC server and HTTP management for Example Service"
-authors = ["Your Name <you@example.com>"]
-readme = "README.md"
-packages = [{include = "{{ org_name }}", from = "src"}]
+authors = [{name = "Your Name", email = "you@example.com"}]
+requires-python = ">=3.11"
+dependencies = [
+    "grpcio==1.71.0",
+    "grpcio-reflection==1.71.0",
+    "grpcio-health-checking==1.71.0",
+    "fastapi>=0.104.0",
+    "uvicorn>=0.24.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "structlog>=23.2.0",
+    "prometheus-client>=0.19.0",
+    "click>=8.1.0",
+    "{{ prefix-name }}-{{ suffix-name }}-proto @ file://../{{ prefix-name }}-{{ suffix-name }}-proto",
+    "testcontainers>=3.7.0"
+]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-grpcio = "^1.60.0"
-grpcio-reflection = "^1.60.0"
-grpcio-health-checking = "^1.60.0"
-fastapi = "^0.104.0"
-uvicorn = "^0.24.0"
-pydantic = "^2.5.0"
-pydantic-settings = "^2.1.0"
-structlog = "^23.2.0"
-prometheus-client = "^0.19.0"
-click = "^8.1.0"
-{{ prefix-name }}-{{ suffix-name }}-proto = {path = "../{{ prefix-name }}-{{ suffix-name }}-proto", develop = true}
-testcontainers = "^3.7.0"
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-mock>=3.12.0",
+    "grpcio-testing==1.71.0",
+    "black>=23.12.0",
+    "isort>=5.13.0",
+    "mypy>=1.8.0"
+]
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.4.0"
-pytest-asyncio = "^0.21.0"
-pytest-mock = "^3.12.0"
-grpcio-testing = "^1.60.0"
-black = "^23.12.0"
-isort = "^5.13.0"
-mypy = "^1.8.0"
-
-[tool.poetry.scripts]
+[project.scripts]
 {{ prefix-name }}-{{ suffix-name }}-server = "{{ org_name }}.{{ solution_name }}.{{ prefix_name }}_{{ suffix_name }}.server.main:main"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
