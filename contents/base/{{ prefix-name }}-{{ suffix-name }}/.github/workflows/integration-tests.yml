@@ -36,9 +36,9 @@ jobs:
           curl -LsSf https://astral.sh/uv/install.sh | sh
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{'{'}}{ matrix.python-version }}
         run: |
-          uv python install ${{ matrix.python-version }}
+          uv python install ${{'{'}}{ matrix.python-version }}
       
       - name: Install Protocol Buffer Compiler
         run: |
@@ -49,7 +49,7 @@ jobs:
       - name: Build proto package (dependency for others)
         run: |
           cd {{ prefix-name }}-{{ suffix-name }}-proto
-          uv sync --python ${{ matrix.python-version }}
+          uv sync --python ${{'{'}}{ matrix.python-version }}
           uv run python build_proto.py
           uv build
           echo "✅ Proto package built successfully"
@@ -60,7 +60,7 @@ jobs:
           for pkg in core persistence; do
             echo "Building {{ prefix-name }}-{{ suffix-name }}-$pkg..."
             cd {{ prefix-name }}-{{ suffix-name }}-$pkg
-            uv sync --python ${{ matrix.python-version }}
+            uv sync --python ${{'{'}}{ matrix.python-version }}
             uv build
             cd ..
           done
@@ -69,14 +69,14 @@ jobs:
           for pkg in api client server; do
             echo "Building {{ prefix-name }}-{{ suffix-name }}-$pkg..."
             cd {{ prefix-name }}-{{ suffix-name }}-$pkg
-            uv sync --python ${{ matrix.python-version }}
+            uv sync --python ${{'{'}}{ matrix.python-version }}
             uv build
             cd ..
           done
           
           # Build integration tests
           cd {{ prefix-name }}-{{ suffix-name }}-integration-tests
-          uv sync --python ${{ matrix.python-version }}
+          uv sync --python ${{'{'}}{ matrix.python-version }}
           echo "✅ All packages built successfully"
       
       - name: Cache built packages
@@ -85,9 +85,9 @@ jobs:
           path: |
             {{ prefix-name }}-{{ suffix-name }}-*/dist/
             {{ prefix-name }}-{{ suffix-name }}-*/.venv/
-          key: built-packages-${{ matrix.python-version }}-${{ github.sha }}
+          key: built-packages-${{'{'}}{ matrix.python-version }}-${{'{'}}{ github.sha }}
           restore-keys: |
-            built-packages-${{ matrix.python-version }}-
+            built-packages-${{'{'}}{ matrix.python-version }}-
 
   # Full stack integration test with Docker
   integration-test-docker:
@@ -110,7 +110,7 @@ jobs:
           path: |
             {{ prefix-name }}-{{ suffix-name }}-*/dist/
             {{ prefix-name }}-{{ suffix-name }}-*/.venv/
-          key: built-packages-${{ env.PYTHON_VERSION }}-${{ github.sha }}
+          key: built-packages-${{'{'}}{ env.PYTHON_VERSION }}-${{'{'}}{ github.sha }}
       
       - name: Start Docker stack
         run: |
@@ -163,7 +163,7 @@ jobs:
           GRPC_SERVER_HOST: localhost
           GRPC_SERVER_PORT: 9010
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/{{ prefix_name }}_{{ suffix_name }}
-          PYTHONPATH: ${{ github.workspace }}
+          PYTHONPATH: ${{'{'}}{ github.workspace }}
       
       - name: Collect Docker logs on failure
         if: failure()
@@ -280,7 +280,7 @@ jobs:
         run: |
           cd {{ prefix-name }}-{{ suffix-name }}-server/src
           uv sync
-          nohup uv run python -m {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.server.main > server.log 2>&1 &
+                      nohup uv run python -m {{ org_name }}.{{ solution_name }}.service.server.main > server.log 2>&1 &
           echo $! > server.pid
           
           # Wait for server to start with proper endpoint testing
@@ -423,23 +423,23 @@ jobs:
       - name: Check results
         run: |
           echo "=== Integration Test Results ==="
-          echo "Build packages: ${{ needs.build-packages.result }}"
-          echo "Docker stack: ${{ needs.integration-test-docker.result }}"
-          echo "Database migrations: ${{ needs.database-migration-test.result }}"
-          echo "gRPC communication: ${{ needs.grpc-communication-test.result }}"
+          echo "Build packages: ${{'{'}}{ needs.build-packages.result }}"
+          echo "Docker stack: ${{'{'}}{ needs.integration-test-docker.result }}"
+          echo "Database migrations: ${{'{'}}{ needs.database-migration-test.result }}"
+          echo "gRPC communication: ${{'{'}}{ needs.grpc-communication-test.result }}"
           
           # Fail if any critical tests failed
-          if [[ "${{ needs.build-packages.result }}" != "success" ]]; then
+          if [[ "${{'{'}}{ needs.build-packages.result }}" != "success" ]]; then
             echo "❌ Package build failed"
             exit 1
           fi
           
-          if [[ "${{ needs.integration-test-docker.result }}" != "success" ]]; then
+          if [[ "${{'{'}}{ needs.integration-test-docker.result }}" != "success" ]]; then
             echo "❌ Docker integration tests failed"
             exit 1
           fi
           
-          if [[ "${{ needs.grpc-communication-test.result }}" != "success" ]]; then
+          if [[ "${{'{'}}{ needs.grpc-communication-test.result }}" != "success" ]]; then
             echo "❌ gRPC communication tests failed"
             exit 1
           fi

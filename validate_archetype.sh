@@ -10,25 +10,27 @@ NC='\033[0m' # No Color
 
 # Configuration
 TEST_SERVICE_NAME="test-validation-service"
-TEST_ORG="testorg"
-TEST_SOLUTION="testsolution"
-TEST_PREFIX="testprefix"
-TEST_SUFFIX="testsuffix"
+TEST_ORG="test.example"
+TEST_SOLUTION="test-python-grpc-service"
+TEST_PREFIX="test"
+TEST_SUFFIX="service"
 MAX_STARTUP_TIME=120 # 2 minutes in seconds
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMP_DIR="$(mktemp -d)"
 VALIDATION_LOG="$TEMP_DIR/validation.log"
 
-# Cleanup function
+# Cleanup function - DISABLED FOR DEBUGGING
 cleanup() {
-    echo -e "${BLUE}Cleaning up...${NC}"
-    if [ -d "$TEMP_DIR/$TEST_SERVICE_NAME" ]; then
-        cd "$TEMP_DIR/$TEST_SERVICE_NAME"
+    echo -e "${BLUE}NOT cleaning up for debugging...${NC}"
+    echo -e "${YELLOW}Generated service directory: $TEMP_DIR/$TEST_SERVICE_NAME/$TEST_PREFIX-$TEST_SUFFIX${NC}"
+    if [ -d "$TEMP_DIR/$TEST_SERVICE_NAME/$TEST_PREFIX-$TEST_SUFFIX" ]; then
+        cd "$TEMP_DIR/$TEST_SERVICE_NAME/$TEST_PREFIX-$TEST_SUFFIX"
         if [ -f "docker-compose.yml" ]; then
-            docker-compose down --volumes --remove-orphans 2>/dev/null || true
+            echo -e "${YELLOW}To manually clean up later, run:${NC}"
+            echo -e "${YELLOW}cd $TEMP_DIR/$TEST_SERVICE_NAME/$TEST_PREFIX-$TEST_SUFFIX && docker-compose down --volumes --remove-orphans${NC}"
         fi
     fi
-    rm -rf "$TEMP_DIR"
+    # rm -rf "$TEMP_DIR"  # DISABLED
 }
 
 # Trap cleanup on exit
@@ -98,15 +100,32 @@ generate_test_service() {
     
     # Create answers file for test generation
     cat > test_answers.yaml << EOF
----
-org-name: "$TEST_ORG"
-solution-name: "$TEST_SOLUTION"
+# Answer file for archetype validation testing
+# Minimal configuration for testing GitHub Actions
+
+project: "$TEST_SERVICE_NAME"
+package_name: "${TEST_PREFIX}_${TEST_SUFFIX}_service"
+description: "Test Python gRPC service with UV for validation testing"
+version: "1.0.0"
+author_full: "Validation Test Suite"
+python_version: "3.11"
 prefix-name: "$TEST_PREFIX"
 suffix-name: "$TEST_SUFFIX"
+service-port: 9010
+management-port: 8080
+team-name: "platform"
+org-name: "$TEST_ORG"
+solution-name: "$TEST_SOLUTION"
+
+# Underscore versions needed by templates
+prefix_name: "$TEST_PREFIX"
+suffix_name: "$TEST_SUFFIX"
+org_name: "$TEST_ORG"
+solution_name: "$TEST_SOLUTION"
 EOF
     
-    # Generate the service
-    if archetect generate "$SCRIPT_DIR" "$TEST_SERVICE_NAME" --answers test_answers.yaml >> "$VALIDATION_LOG" 2>&1; then
+    # Generate the service using render command
+    if archetect render "$SCRIPT_DIR" --answer-file test_answers.yaml "$TEST_SERVICE_NAME" >> "$VALIDATION_LOG" 2>&1; then
         test_result 0 "Archetype generation successful"
     else
         test_result 1 "Archetype generation failed"
@@ -126,7 +145,7 @@ EOF
 validate_template_substitution() {
     log "\n${BLUE}Validating template variable substitution...${NC}"
     
-    cd "$TEMP_DIR/$TEST_SERVICE_NAME"
+    cd "$TEMP_DIR/$TEST_SERVICE_NAME/$TEST_PREFIX-$TEST_SUFFIX"
     
     if [ -f "scripts/validate_templates.py" ]; then
         if python scripts/validate_templates.py >> "$VALIDATION_LOG" 2>&1; then
@@ -172,19 +191,23 @@ test_uv_sync() {
 test_docker_stack() {
     log "\n${BLUE}Testing Docker stack build and startup...${NC}"
     
-    cd "$TEMP_DIR/$TEST_SERVICE_NAME"
+    cd "$TEMP_DIR/$TEST_SERVICE_NAME/$TEST_PREFIX-$TEST_SUFFIX"
     
-    # Build the Docker stack
-    if docker-compose build >> "$VALIDATION_LOG" 2>&1; then
+    # Build the Docker stack - SHOW OUTPUT TO TERMINAL
+    echo -e "${YELLOW}Running: docker-compose build${NC}"
+    echo -e "${YELLOW}Working directory: $(pwd)${NC}"
+    if docker-compose build 2>&1 | tee -a "$VALIDATION_LOG"; then
         test_result 0 "Docker build successful"
     else
         test_result 1 "Docker build failed"
+        echo -e "${RED}Docker build failed. Generated service is at: $TEMP_DIR/$TEST_SERVICE_NAME${NC}"
         return 1
     fi
     
     # Start the stack
     log "${YELLOW}Starting Docker stack...${NC}"
-    if docker-compose up -d >> "$VALIDATION_LOG" 2>&1; then
+    echo -e "${YELLOW}Running: docker-compose up -d${NC}"
+    if docker-compose up -d 2>&1 | tee -a "$VALIDATION_LOG"; then
         test_result 0 "Docker stack started"
     else
         test_result 1 "Docker stack failed to start"
@@ -225,11 +248,11 @@ test_docker_stack() {
 test_service_connectivity() {
     log "\n${BLUE}Testing service connectivity...${NC}"
     
-    cd "$TEMP_DIR/$TEST_SERVICE_NAME"
+    cd "$TEMP_DIR/$TEST_SERVICE_NAME/$TEST_PREFIX-$TEST_SUFFIX"
     
     # Test gRPC service port
-    if curl -s --connect-timeout 5 http://localhost:50051 >/dev/null 2>&1 || 
-       nc -z localhost 50051 >/dev/null 2>&1; then
+    if curl -s --connect-timeout 5 http://localhost:9010 >/dev/null 2>&1 || 
+       nc -z localhost 9010 >/dev/null 2>&1; then
         test_result 0 "gRPC service port accessible"
     else
         test_result 1 "gRPC service port not accessible"
@@ -243,10 +266,10 @@ test_service_connectivity() {
     fi
     
     # Test metrics endpoint
-    if curl -s --connect-timeout 5 http://localhost:9011/metrics | grep -q "grpc_" 2>/dev/null; then
-        test_result 0 "Metrics endpoint accessible and contains gRPC metrics"
+    if curl -s --connect-timeout 5 http://localhost:9011/metrics | grep -q "python_" 2>/dev/null; then
+        test_result 0 "Metrics endpoint accessible and contains metrics"
     else
-        test_result 1 "Metrics endpoint not accessible or missing gRPC metrics"
+        test_result 1 "Metrics endpoint not accessible or missing metrics"
     fi
 }
 
@@ -254,7 +277,7 @@ test_service_connectivity() {
 test_monitoring() {
     log "\n${BLUE}Testing monitoring infrastructure...${NC}"
     
-    cd "$TEMP_DIR/$TEST_SERVICE_NAME"
+    cd "$TEMP_DIR/$TEST_SERVICE_NAME/$TEST_PREFIX-$TEST_SUFFIX"
     
     # Test Prometheus
     if curl -s --connect-timeout 10 http://localhost:9090/-/healthy >/dev/null 2>&1; then
@@ -275,7 +298,7 @@ test_monitoring() {
 run_integration_tests() {
     log "\n${BLUE}Running integration tests...${NC}"
     
-    cd "$TEMP_DIR/$TEST_SERVICE_NAME"
+    cd "$TEMP_DIR/$TEST_SERVICE_NAME/$TEST_PREFIX-$TEST_SUFFIX"
     
     if [ -f "scripts/run-integration-tests.sh" ]; then
         # Make the script executable
@@ -300,6 +323,7 @@ main() {
     log "${BLUE}========================================${NC}"
     log "Validation log: $VALIDATION_LOG"
     log "Temp directory: $TEMP_DIR"
+    log "${YELLOW}Generated service will be at: $TEMP_DIR/$TEST_SERVICE_NAME/$TEST_PREFIX-$TEST_SUFFIX${NC}"
     
     local overall_start_time=$(date +%s)
     
@@ -307,6 +331,12 @@ main() {
     check_prerequisites || exit 1
     generate_test_service || exit 1
     validate_template_substitution || exit 1
+    
+    # Check if we should stop after generation for debugging
+    if [ "$1" = "--generate-only" ]; then
+        log "\n${YELLOW}Stopping after generation as requested. Service generated at: $TEMP_DIR/$TEST_SERVICE_NAME/$TEST_PREFIX-$TEST_SUFFIX${NC}"
+        return 0
+    fi
     
     log "\n${BLUE}Starting end-to-end timing measurement...${NC}"
     local e2e_start_time=$(date +%s)
@@ -343,10 +373,12 @@ main() {
     
     if [ $TESTS_FAILED -eq 0 ]; then
         log "\n${GREEN}🎉 All validation tests passed! Archetype is ready for release.${NC}"
+        log "${YELLOW}Generated service directory preserved at: $TEMP_DIR/$TEST_SERVICE_NAME/$TEST_PREFIX-$TEST_SUFFIX${NC}"
         return 0
     else
         log "\n${RED}❌ Validation failed. Please check the issues above.${NC}"
         log "${YELLOW}Validation log available at: $VALIDATION_LOG${NC}"
+        log "${YELLOW}Generated service directory preserved at: $TEMP_DIR/$TEST_SERVICE_NAME/$TEST_PREFIX-$TEST_SUFFIX${NC}"
         return 1
     fi
 }

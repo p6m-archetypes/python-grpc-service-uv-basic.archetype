@@ -6,7 +6,7 @@ from typing import Optional
 import structlog
 
 # Note: These imports will work once we set up proper dependencies
-# from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.example_service import ExampleService
+# from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.{{ suffix_name }}_service import ExampleService
 # from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.models import (
 #     CreateExampleResponse,
 #     DeleteExampleRequest,

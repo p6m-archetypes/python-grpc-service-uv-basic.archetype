@@ -40,8 +40,8 @@ dev = [
 ]
 
 [project.scripts]
-{{ prefix-name }}-{{ suffix-name }}-server = "{{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.server.main:main"
-{{ prefix-name }}-{{ suffix-name }}-migrate = "{{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.server.migration:main"
+{{ prefix-name }}-{{ suffix-name }}-server = "{{ org_name }}.{{ solution_name }}.service.server.main:main"
+{{ prefix-name }}-{{ suffix-name }}-migrate = "{{ org_name }}.{{ solution_name }}.service.server.migration:main"
 generate-grpc = "scripts.generate_grpc:main"
 benchmark = "scripts.benchmark:cli"
 

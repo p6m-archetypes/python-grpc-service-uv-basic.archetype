@@ -1,0 +1,22 @@
+# Answer file for https://github.com/p6m-archetypes/python-grpc-service-uv-basic.archetype.git
+# Minimal configuration for testing GitHub Actions
+
+project: "test-python-grpc-service"
+package_name: "test_python_grpc_service"
+description: "Test Python gRPC service with UV for GitHub Actions testing"
+version: "1.0.0"
+author_full: "Test Suite"
+python_version: "3.11"
+prefix-name: "test"
+suffix-name: "service"
+service-port: 50051
+management-port: 8080
+team-name: "platform"
+org-name: "test.example"
+solution-name: "test-python-grpc-service"
+
+# Underscore versions needed by templates
+prefix_name: "test"
+suffix_name: "service"
+org_name: "test.example"
+solution_name: "test-python-grpc-service" 
