@@ -15,7 +15,7 @@ dependencies = [
     "structlog>=23.2.0",
     "prometheus-client>=0.19.0",
     "click>=8.1.0",
-    "{{ prefix-name }}-{{ suffix-name }}-proto @ file://../{{ prefix-name }}-{{ suffix-name }}-proto",
+    "{{ prefix-name }}-{{ suffix-name }}-proto",
     "testcontainers>=3.7.0"
 ]
 
