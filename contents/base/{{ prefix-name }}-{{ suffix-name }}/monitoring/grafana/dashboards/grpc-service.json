@@ -1,0 +1,50 @@
+{
+  "id": null,
+  "title": "{{ prefix-name }}-{{ suffix-name }} gRPC Service",
+    "tags": ["grpc", "python"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(grpc_server_handled_total[5m])",
+            "legendFormat": "RPS"
+          }
+        ],
+        "xAxis": {
+          "show": true
+        },
+        "yAxes": [
+          {
+            "label": "requests/sec",
+            "show": true
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        }
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "timepicker": {},
+    "templating": {
+      "list": []
+    },
+    "annotations": {
+      "list": []
+    },
+      "refresh": "5s",
+  "schemaVersion": 16,
+  "version": 0,
+  "links": []
+} 

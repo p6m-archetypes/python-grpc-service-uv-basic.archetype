@@ -158,7 +158,7 @@ if [[ ! -f ".env.local" ]]; then
 # Copy this file to .env and modify as needed
 
 # Database
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/example_service
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/{{ prefix_name }}_{{ suffix_name }}
 DATABASE_ECHO=false
 
 # gRPC Server
@@ -200,7 +200,7 @@ if poetry run python -c "
 import sys
 sys.path.insert(0, '../{{ prefix-name }}-{{ suffix-name }}-proto/src')
 try:
-    import {{ org-name }}.{{ solution-name }}.example_service.grpc.v1.example_service_v1_pb2 as pb2
+    import {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.grpc.{{ prefix_name }}_{{ suffix_name }}_pb2 as pb2
     print('✅ gRPC imports work')
 except ImportError as e:
     print(f'❌ gRPC import failed: {e}')
@@ -214,9 +214,9 @@ cd ..
 
 # Test Docker build
 echo "   Testing Docker build..."
-if docker build -t example-service:dev-test . >/dev/null 2>&1; then
+if docker build -t {{ prefix-name }}-{{ suffix-name }}:dev-test . >/dev/null 2>&1; then
     echo "   ✅ Docker build test passed"
-    docker rmi example-service:dev-test >/dev/null 2>&1 || true
+    docker rmi {{ prefix-name }}-{{ suffix-name }}:dev-test >/dev/null 2>&1 || true
 else
     echo "   ❌ Docker build test failed"
 fi

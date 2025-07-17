@@ -22,9 +22,8 @@ jobs:
       - name: Login to Python Repository
         uses: p6m-actions/python-uv-repository-login@v1
         with:
-          repository: artifactory
-          username: ${{'{'}}{ secrets.ARTIFACTORY_USERNAME }}
-          password: ${{'{'}}{ secrets.ARTIFACTORY_IDENTITY_TOKEN }}
+          credentials: |
+            artifactory=${{'{'}}{ secrets.ARTIFACTORY_USERNAME }}:${{'{'}}{ secrets.ARTIFACTORY_IDENTITY_TOKEN }}
 
       - name: Build Python Application
         uses: p6m-actions/python-uv-build@v1

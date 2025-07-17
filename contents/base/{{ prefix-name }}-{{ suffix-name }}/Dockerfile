@@ -70,12 +70,15 @@ COPY --chown=appuser:appuser pyproject.toml ./
 # Switch to non-root user
 USER appuser
 
+# Set working directory to server package to avoid namespace conflicts
+WORKDIR /app/{{ prefix-name }}-{{ suffix-name }}-server/src
+
 # Expose ports
-EXPOSE 9010 9011
+EXPOSE 9010 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:9011/health/live || exit 1
+    CMD curl -f http://localhost:8080/health/live || exit 1
 
 # Default command
-CMD ["python", "-m", "{{ org-name }}.{{ solution-name }}.example_service.server.main"]
+CMD ["python", "-m", "{{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.server.main"]

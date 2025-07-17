@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package {{ org_name }}.{{ solution_name }}.{{ prefix_name }}_{{ suffix_name }}.grpc;
+package {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.grpc;
 
 // {{ PrefixName }} request for creating a {{ prefix-name }}
 message Create{{ PrefixName }}Request {

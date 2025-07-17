@@ -28,7 +28,7 @@ uv run {{ prefix-name }}-{{ suffix-name }}-server
 
 **That's it!** The server runs on:
 - **gRPC**: `localhost:9010`
-- **HTTP** (health/metrics): `localhost:8080`
+- **HTTP** (health/metrics): `localhost:8080` (or `localhost:9011` when using Docker)
 
 ### Alternative: Ephemeral Database
 
@@ -54,18 +54,18 @@ uv sync --dev
 📋 Connection Details:
    Host:     localhost
    Port:     54321  (randomized port)
-   Database: example_service
+   Database: {{ prefix_name }}_{{ suffix_name }}
    Username: postgres
    Password: postgres
 
 💻 Connect via psql:
-   psql -h localhost -p 54321 -U postgres -d example_service
+   psql -h localhost -p 54321 -U postgres -d {{ prefix_name }}_{{ suffix_name }}
 
 🔧 DataGrip/Database Tool Settings:
    Type:     PostgreSQL
    Host:     localhost
    Port:     54321
-   Database: example_service
+   Database: {{ prefix_name }}_{{ suffix_name }}
    User:     postgres
    Password: postgres
 ================================================================================
@@ -79,7 +79,7 @@ curl http://localhost:8080/health
 
 # gRPC test (requires grpcurl)
 grpcurl -plaintext -d '{"{{ prefix_name }}": {"name": "test", "description": "Test {{ prefix-name }}"}}' \
-  localhost:9010 {{ org_name }}.{{ solution_name }}.{{ prefix_name }}_{{ suffix_name }}.grpc.v1.{{ PrefixName }}{{ SuffixName }}/Create{{ PrefixName }}
+  localhost:9010 {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.grpc.{{ PrefixName }}{{ SuffixName }}/Create{{ PrefixName }}
 ```
 
 ## 🏗️ Build System
@@ -189,7 +189,7 @@ docker-compose up -d
 
 # Build and run {{ suffix-name }}
 docker build -t {{ prefix-name }}-{{ suffix-name }} .
-docker run -p 9010:9010 -p 8080:8080 {{ prefix-name }}-{{ suffix-name }}
+docker run -p 9010:9010 -p 9011:8080 {{ prefix-name }}-{{ suffix-name }}
 ```
 
 ### Production
