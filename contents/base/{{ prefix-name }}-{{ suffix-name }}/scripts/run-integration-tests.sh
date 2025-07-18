@@ -232,7 +232,7 @@ run_tests() {
     export GRPC_SERVER_PORT=9010
     export MANAGEMENT_PORT=9011
     export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/{{ prefix_name }}_{{ suffix_name }}"
-    export PYTHONPATH="$PROJECT_ROOT/{{ prefix-name }}-{{ suffix-name }}/src:$PROJECT_ROOT/{{ prefix-name }}-{{ suffix-name }}-integration-tests/src"
+    export PYTHONPATH="$PROJECT_ROOT/{{ prefix-name }}-{{ suffix-name }}-proto/src:$PROJECT_ROOT/{{ prefix-name }}-{{ suffix-name }}-persistence/src:$PROJECT_ROOT/{{ prefix-name }}-{{ suffix-name }}-api/src:$PROJECT_ROOT/{{ prefix-name }}-{{ suffix-name }}-core/src:$PROJECT_ROOT/{{ prefix-name }}-{{ suffix-name }}-client/src:$PROJECT_ROOT/{{ prefix-name }}-{{ suffix-name }}-server/src:$PROJECT_ROOT/{{ prefix-name }}-{{ suffix-name }}-integration-tests/src"
     
     # Build pytest command
     pytest_cmd="uv run pytest tests/integration/"
