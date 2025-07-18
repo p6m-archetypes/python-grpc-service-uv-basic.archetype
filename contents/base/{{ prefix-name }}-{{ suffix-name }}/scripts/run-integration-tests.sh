@@ -84,10 +84,14 @@ print_status "Starting integration tests from $PROJECT_ROOT"
 # Cleanup function
 cleanup() {
     if [[ "$CLEANUP" == "true" ]]; then
-        print_status "Cleaning up..."
+        print_status "Cleaning up project resources only..."
         cd "$PROJECT_ROOT"
-        docker-compose down -v --remove-orphans 2>/dev/null || true
-        docker system prune -f 2>/dev/null || true
+        # Only clean up THIS project's resources
+        docker-compose down --remove-orphans 2>/dev/null || true
+        # Remove only this project's volumes (if any)
+        docker volume rm $(docker volume ls -q | grep "{{ prefix-name }}-{{ suffix-name }}") 2>/dev/null || true
+        # Remove only this project's network
+        docker network rm {{ prefix-name }}-{{ suffix-name }}-network 2>/dev/null || true
     fi
 }
 
@@ -151,8 +155,8 @@ start_docker_stack() {
     print_status "Starting Docker stack..."
     cd "$PROJECT_ROOT"
     
-    # Clean up any existing containers
-    docker-compose down -v 2>/dev/null || true
+    # Clean up any existing containers for this project only
+    docker-compose down 2>/dev/null || true
     
     # Start services
     docker-compose up --build -d
