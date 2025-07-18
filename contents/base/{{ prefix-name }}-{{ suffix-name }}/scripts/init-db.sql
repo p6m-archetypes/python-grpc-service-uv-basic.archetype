@@ -1,11 +1,11 @@
--- Initialize Example Service database
+-- Initialize {{ prefix-name }}-{{ suffix-name }} Service database
 -- This script runs during container startup
 
 -- Create database if it doesn't exist (handled by POSTGRES_DB env var)
--- CREATE DATABASE example_service;
+-- CREATE DATABASE {{ prefix_name }}_{{ suffix_name }};
 
 -- Switch to the database
-\c example_service;
+\c {{ prefix_name }}_{{ suffix_name }};
 
 -- Create extensions if needed
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -35,6 +35,6 @@ INSERT INTO example (name) VALUES
 ON CONFLICT DO NOTHING;
 
 -- Grant permissions (adjust as needed for production)
--- GRANT ALL PRIVILEGES ON DATABASE example_service TO postgres;
+-- GRANT ALL PRIVILEGES ON DATABASE {{ prefix_name }}_{{ suffix_name }} TO postgres;
 -- GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;
 -- GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO postgres;

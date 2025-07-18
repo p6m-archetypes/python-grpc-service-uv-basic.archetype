@@ -24,20 +24,7 @@ def pytest_configure(config):
     )
 
 
-def pytest_collection_modifyitems(config, items):
-    """Modify test collection to add markers automatically."""
-    for item in items:
-        # Add unit marker to tests in unit directory
-        if "unit" in str(item.fspath):
-            item.add_marker(pytest.mark.unit)
-        
-        # Add integration marker to tests in integration directory
-        if "integration" in str(item.fspath):
-            item.add_marker(pytest.mark.integration)
-        
-        # Add requires_docker marker to integration tests
-        if "integration" in str(item.fspath) or "requires_docker" in item.keywords:
-            item.add_marker(pytest.mark.requires_docker)
+
 
 
 def pytest_runtest_setup(item):
@@ -70,15 +57,30 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_cmdline_preparse(config, args):
-    """Preprocess command line arguments."""
-    if "--integration-only" in args:
-        args.extend(["-m", "integration"])
-        args.remove("--integration-only")
+def pytest_collection_modifyitems(config, items):
+    """Modify test collection to add markers automatically."""
+    # Handle command line options
+    if config.getoption("--integration-only", default=False):
+        # Keep only integration tests
+        integration_items = [item for item in items if "integration" in str(item.fspath)]
+        items[:] = integration_items
+    elif config.getoption("--unit-only", default=False):
+        # Keep only unit tests  
+        unit_items = [item for item in items if "unit" in str(item.fspath)]
+        items[:] = unit_items
     
-    if "--unit-only" in args:
-        args.extend(["-m", "unit"])
-        args.remove("--unit-only")
+    for item in items:
+        # Add unit marker to tests in unit directory
+        if "unit" in str(item.fspath):
+            item.add_marker(pytest.mark.unit)
+        
+        # Add integration marker to tests in integration directory
+        if "integration" in str(item.fspath):
+            item.add_marker(pytest.mark.integration)
+        
+        # Add requires_docker marker to integration tests
+        if "integration" in str(item.fspath) or "requires_docker" in item.keywords:
+            item.add_marker(pytest.mark.requires_docker)
 
 
 def _is_docker_available() -> bool:

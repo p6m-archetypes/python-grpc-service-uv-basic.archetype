@@ -1,29 +1,35 @@
-[tool.poetry]
+[project]
 name = "{{ prefix-name }}-{{ suffix-name }}-integration-tests"
 version = "0.1.0"
 description = "Integration and end-to-end tests for Example Service"
-authors = ["Your Name <you@example.com>"]
-readme = "README.md"
+authors = [{name = "Your Name", email = "you@example.com"}]
+requires-python = ">=3.11"
+dependencies = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-mock>=3.12.0",
+    "pytest-cov>=4.1.0",
+    "testcontainers>=3.7.0",
+    "grpcio-testing==1.71.0",
+    "requests>=2.31.0",
+    "psycopg2-binary>=2.9.0",
+    "aiohttp>=3.8.0",
+    "asyncpg>=0.29.0"
+]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-pytest = "^7.4.0"
-pytest-asyncio = "^0.21.0"
-pytest-mock = "^3.12.0"
-pytest-cov = "^4.1.0"
-testcontainers = "^3.7.0"
-grpcio-testing = "^1.60.0"
-requests = "^2.31.0"
-psycopg2-binary = "^2.9.0"
-
-[tool.poetry.group.dev.dependencies]
-black = "^23.12.0"
-isort = "^5.13.0"
-mypy = "^1.8.0"
+[project.optional-dependencies]
+dev = [
+    "black>=23.12.0",
+    "isort>=5.13.0",
+    "mypy>=1.8.0"
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["tests"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"

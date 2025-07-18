@@ -135,8 +135,8 @@ sys.path.insert(0, 'src')
 
 try:
     # Try to import generated modules
-    import {{ org-name }}.{{ solution-name }}.example_service.grpc.v1.example_service_v1_pb2 as pb2
-    import {{ org-name }}.{{ solution-name }}.example_service.grpc.v1.example_service_v1_pb2_grpc as pb2_grpc
+    import {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.grpc.{{ prefix_name }}_{{ suffix_name }}_pb2 as pb2
+    import {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.grpc.{{ prefix_name }}_{{ suffix_name }}_pb2_grpc as pb2_grpc
     print('✅ Generated modules can be imported successfully')
     
     # Test basic functionality

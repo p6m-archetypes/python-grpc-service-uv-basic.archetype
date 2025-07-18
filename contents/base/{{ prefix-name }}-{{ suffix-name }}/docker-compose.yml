@@ -9,7 +9,7 @@ services:
     container_name: {{ prefix-name }}-{{ suffix-name }}
     ports:
       - "9010:9010"  # gRPC port
-      - "9011:9011"  # Management HTTP port
+      - "9011:8080"  # Management HTTP port
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/{{ prefix_name }}_{{ suffix_name }}
       - LOGGING_LEVEL=INFO
@@ -22,20 +22,20 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9011/health/live"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
     restart: unless-stopped
     networks:
-      - example-service-network
+      - {{ prefix-name }}-{{ suffix-name }}-network
 
   postgres:
     image: postgres:15-alpine
-    container_name: example-service-postgres
+    container_name: {{ prefix-name }}-{{ suffix-name }}-postgres
     environment:
-      - POSTGRES_DB=example_service
+      - POSTGRES_DB={{ prefix_name }}_{{ suffix_name }}
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     ports:
@@ -44,18 +44,18 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d example_service"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d {{ prefix_name }}_{{ suffix_name }}"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
     restart: unless-stopped
     networks:
-      - example-service-network
+      - {{ prefix-name }}-{{ suffix-name }}-network
 
   prometheus:
     image: prom/prometheus:v2.45.0
-    container_name: example-service-prometheus
+    container_name: {{ prefix-name }}-{{ suffix-name }}-prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -69,14 +69,14 @@ services:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     depends_on:
-      - example-service
+      - {{ prefix-name }}-{{ suffix-name }}
     restart: unless-stopped
     networks:
-      - example-service-network
+      - {{ prefix-name }}-{{ suffix-name }}-network
 
   grafana:
     image: grafana/grafana:10.0.0
-    container_name: example-service-grafana
+    container_name: {{ prefix-name }}-{{ suffix-name }}-grafana
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
@@ -91,7 +91,7 @@ services:
       - prometheus
     restart: unless-stopped
     networks:
-      - example-service-network
+      - {{ prefix-name }}-{{ suffix-name }}-network
 
 volumes:
   postgres_data:
@@ -102,5 +102,5 @@ volumes:
     driver: local
 
 networks:
-  example-service-network:
+  {{ prefix-name }}-{{ suffix-name }}-network:
     driver: bridge

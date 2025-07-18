@@ -1,25 +1,25 @@
-[tool.poetry]
+[project]
 name = "{{ prefix-name }}-{{ suffix-name }}-proto"
 version = "0.1.0"
 description = "Protocol Buffer definitions for Example Service"
-authors = ["Your Name <you@example.com>"]
-readme = "README.md"
-packages = [{include = "{{ org-name }}", from = "src"}]
+authors = [{name = "Your Name", email = "you@example.com"}]
+requires-python = ">=3.11"
+dependencies = [
+    "grpcio==1.71.0",
+    "grpcio-tools==1.71.0",
+    "protobuf>=4.25.0"
+]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-grpcio = "^1.60.0"
-grpcio-tools = "^1.60.0"
-protobuf = "^4.25.0"
-
-[tool.poetry.group.dev.dependencies]
-black = "^23.12.0"
-isort = "^5.13.0"
-mypy = "^1.8.0"
+[project.optional-dependencies]
+dev = [
+    "black>=23.12.0",
+    "isort>=5.13.0",
+    "mypy>=1.8.0"
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry.build]
-generate-setup-file = false
+[tool.hatch.build.targets.wheel]
+packages = ["src/{{ org_name }}"]

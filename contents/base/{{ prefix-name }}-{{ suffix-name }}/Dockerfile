@@ -22,10 +22,28 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 # Set work directory
 WORKDIR /app
 
-# Copy uv configuration files
+# Copy all package configurations
 COPY pyproject.toml uv.lock* ./
+COPY {{ prefix-name }}-{{ suffix-name }}-proto/pyproject.toml ./{{ prefix-name }}-{{ suffix-name }}-proto/
+COPY {{ prefix-name }}-{{ suffix-name }}-core/pyproject.toml ./{{ prefix-name }}-{{ suffix-name }}-core/
+COPY {{ prefix-name }}-{{ suffix-name }}-persistence/pyproject.toml ./{{ prefix-name }}-{{ suffix-name }}-persistence/
+COPY {{ prefix-name }}-{{ suffix-name }}-api/pyproject.toml ./{{ prefix-name }}-{{ suffix-name }}-api/
+COPY {{ prefix-name }}-{{ suffix-name }}-client/pyproject.toml ./{{ prefix-name }}-{{ suffix-name }}-client/
+COPY {{ prefix-name }}-{{ suffix-name }}-server/pyproject.toml ./{{ prefix-name }}-{{ suffix-name }}-server/
 
-# Install dependencies
+# Copy all source code
+COPY {{ prefix-name }}-{{ suffix-name }}-proto/src ./{{ prefix-name }}-{{ suffix-name }}-proto/src/
+COPY {{ prefix-name }}-{{ suffix-name }}-core/src ./{{ prefix-name }}-{{ suffix-name }}-core/src/
+COPY {{ prefix-name }}-{{ suffix-name }}-persistence/src ./{{ prefix-name }}-{{ suffix-name }}-persistence/src/
+COPY {{ prefix-name }}-{{ suffix-name }}-api/src ./{{ prefix-name }}-{{ suffix-name }}-api/src/
+COPY {{ prefix-name }}-{{ suffix-name }}-client/src ./{{ prefix-name }}-{{ suffix-name }}-client/src/
+COPY {{ prefix-name }}-{{ suffix-name }}-server/src ./{{ prefix-name }}-{{ suffix-name }}-server/src/
+
+# Copy scripts and proto files
+COPY scripts ./scripts
+COPY {{ prefix-name }}-{{ suffix-name }}-proto/src/{{ org_name }}/{{ solution_name }}/{{ prefix_name }}/{{ suffix_name }}/grpc/*.proto ./{{ prefix-name }}-{{ suffix-name }}-proto/src/{{ org_name }}/{{ solution_name }}/{{ prefix_name }}/{{ suffix_name }}/grpc/
+
+# Install dependencies (this will build proto and install all packages)
 RUN uv sync --frozen --no-dev
 
 # Production stage
@@ -47,22 +65,8 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser
 # Set work directory
 WORKDIR /app
 
-# Copy virtual environment from builder stage
-COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
-
-# Copy application code
-COPY --chown=appuser:appuser {{ prefix-name }}-{{ suffix-name }}-proto/src ./{{ prefix-name }}-{{ suffix-name }}-proto/src
-COPY --chown=appuser:appuser {{ prefix-name }}-{{ suffix-name }}-api/src ./{{ prefix-name }}-{{ suffix-name }}-api/src
-COPY --chown=appuser:appuser {{ prefix-name }}-{{ suffix-name }}-core/src ./{{ prefix-name }}-{{ suffix-name }}-core/src
-COPY --chown=appuser:appuser {{ prefix-name }}-{{ suffix-name }}-persistence/src ./{{ prefix-name }}-{{ suffix-name }}-persistence/src
-COPY --chown=appuser:appuser {{ prefix-name }}-{{ suffix-name }}-server/src ./{{ prefix-name }}-{{ suffix-name }}-server/src
-COPY --chown=appuser:appuser {{ prefix-name }}-{{ suffix-name }}-client/src ./{{ prefix-name }}-{{ suffix-name }}-client/src
-
-# Copy scripts
-COPY --chown=appuser:appuser scripts/ ./scripts/
-
-# Copy project configuration
-COPY --chown=appuser:appuser pyproject.toml ./
+# Copy virtual environment and full application from builder stage
+COPY --from=builder --chown=appuser:appuser /app /app
 
 # Build will automatically generate gRPC code
 # No manual generation needed
@@ -70,12 +74,15 @@ COPY --chown=appuser:appuser pyproject.toml ./
 # Switch to non-root user
 USER appuser
 
+# Set working directory to server package to avoid namespace conflicts
+WORKDIR /app/{{ prefix-name }}-{{ suffix-name }}-server/src
+
 # Expose ports
-EXPOSE 9010 9011
+EXPOSE 9010 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:9011/health/live || exit 1
+    CMD curl -f http://localhost:8080/health/live || exit 1
 
-# Default command
-CMD ["python", "-m", "{{ org-name }}.{{ solution-name }}.example_service.server.main"]
+# Default command  
+CMD ["python", "-m", "{{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.server.main"]

@@ -69,7 +69,7 @@ class ExampleServiceHealthCheck(HealthCheck):
     
     @property
     def name(self) -> str:
-        return "example_service"
+        return "{{ prefix_name }}_{{ suffix_name }}"
 
 
 class HealthCheckManager:
