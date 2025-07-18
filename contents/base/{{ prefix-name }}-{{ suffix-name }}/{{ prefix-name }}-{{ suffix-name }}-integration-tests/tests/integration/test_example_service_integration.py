@@ -4,7 +4,7 @@ import uuid
 
 import pytest
 
-from ..utils.test_fixtures import TestDataFactory
+# from ..utils.test_fixtures import TestDataFactory //TODO: Uncomment this when the fixtures are implemented
 
 
 class TestExampleServiceIntegration:

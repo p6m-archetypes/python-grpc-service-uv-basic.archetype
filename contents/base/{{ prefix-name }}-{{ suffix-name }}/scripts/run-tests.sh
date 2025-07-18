@@ -35,6 +35,9 @@ else
     export DATABASE_URL=${DATABASE_URL:-"postgresql+asyncpg://postgres:postgres@localhost:5432/{{ prefix_name }}_{{ suffix_name }}_test"}
     export LOGGING_LEVEL=DEBUG
     export LOGGING_FORMAT=console
+
+    # Set Python path for module imports
+    export PYTHONPATH="{{ prefix-name }}-{{ suffix-name }}/src:{{ prefix-name }}-{{ suffix-name }}-integration-tests/src"
     
     # Start test database if needed
     if [[ "${START_DB:-}" == "true" ]]; then

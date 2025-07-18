@@ -135,8 +135,18 @@ build_packages() {
     cd "$PROJECT_ROOT"
     
     # Use workspace build - much simpler!
-    print_status "Building workspace and all packages..."
-    uv sync
+    # Install root workspace first
+    print_status "Installing workspace dependencies..."
+    uv sync --all-extras
+    
+    # Install each sub-package with dependencies  
+    for package in test-service-proto test-service-persistence test-service-api test-service-core test-service-client test-service-server test-service-integration-tests; do
+        print_status "Installing $package dependencies..."
+        cd "$package"
+        uv sync --all-extras
+        cd ..
+    done
+    
     print_status "Building proto package..."
     cd {{ prefix-name }}-{{ suffix-name }}-proto
     uv run python build_proto.py
@@ -215,14 +225,14 @@ verify_services() {
 # Run tests
 run_tests() {
     print_status "Running integration tests..."
-    cd "$PROJECT_ROOT/{{ prefix-name }}-{{ suffix-name }}-integration-tests"
+    cd "$PROJECT_ROOT"
     
     # Set environment variables
     export GRPC_SERVER_HOST=localhost
     export GRPC_SERVER_PORT=9010
     export MANAGEMENT_PORT=9011
     export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/{{ prefix_name }}_{{ suffix_name }}"
-    export PYTHONPATH="$PROJECT_ROOT"
+    export PYTHONPATH="$PROJECT_ROOT/{{ prefix-name }}-{{ suffix-name }}/src:$PROJECT_ROOT/{{ prefix-name }}-{{ suffix-name }}-integration-tests/src"
     
     # Build pytest command
     pytest_cmd="uv run pytest tests/integration/"

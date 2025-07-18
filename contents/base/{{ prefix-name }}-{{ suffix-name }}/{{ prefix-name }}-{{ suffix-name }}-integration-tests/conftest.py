@@ -109,5 +109,5 @@ def event_loop(event_loop_policy):
 
 
 # Import fixtures from utils module
-from tests.utils.test_fixtures import *  # noqa: F403, F401, E402
+# from tests.utils.test_fixtures import *  # noqa: F403, F401, E402 //TODO: Uncomment this when the fixtures are implemented
 from tests.utils.grpc_test_utils import *  # noqa: F403, F401, E402

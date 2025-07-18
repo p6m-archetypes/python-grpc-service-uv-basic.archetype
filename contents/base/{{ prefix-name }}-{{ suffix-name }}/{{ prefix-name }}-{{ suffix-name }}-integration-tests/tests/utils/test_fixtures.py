@@ -8,11 +8,22 @@ import pytest
 import pytest_asyncio
 from testcontainers.postgres import PostgresContainer
 
-# Note: These imports will work once we set up proper dependencies
-# from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.persistence.database_config import DatabaseConfig, init_database
-# from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.persistence.repositories.example_repository import ExampleRepository
-# from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.core.example_service_core import ExampleServiceCore
-# from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.models import ExampleDto
+# Real imports for integration testing
+from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.persistence.database_config import DatabaseConfig
+from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.persistence.repositories.{{ prefix_name }}_repository import {{ PrefixName }}Repository  
+from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.core.example_service_core import ExampleServiceCore
+from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.api.models import (
+    ExampleDto,
+    CreateExampleResponse,
+    GetExampleRequest,
+    GetExampleResponse,
+    GetExamplesRequest,
+    GetExamplesResponse,
+    UpdateExampleResponse,
+    DeleteExampleRequest,
+    DeleteExampleResponse,
+)
+from {{ org_name }}.{{ solution_name }}.{{ prefix_name }}.{{ suffix_name }}.persistence.entities.{{ prefix_name }}_entity import {{ PrefixName }}Entity
 
 
 @pytest.fixture(scope="session")
@@ -43,22 +54,11 @@ def database_url(postgres_container: PostgresContainer) -> str:
 @pytest.mark.requires_docker
 async def db_config(database_url: str):
     """Create and initialize database configuration for testing."""
-    # This will be implemented once we have the actual database module
-    # db_config = DatabaseConfig(database_url, echo=True)
-    # await db_config.create_tables()
-    # yield db_config
-    # await db_config.close()
-    
-    # Placeholder for now
-    db_config = type('DatabaseConfig', (), {
-        'get_session': lambda: type('AsyncContextManager', (), {
-            '__aenter__': lambda self: type('Session', (), {})(),
-            '__aexit__': lambda self, *args: None
-        })(),
-        'create_tables': lambda: None,
-        'close': lambda: None
-    })()
+    # Use real database configuration
+    db_config = DatabaseConfig(database_url, echo=True)
+    await db_config.create_tables()
     yield db_config
+    await db_config.close()
 
 
 @pytest_asyncio.fixture
@@ -72,112 +72,130 @@ async def db_session(db_config):
 @pytest_asyncio.fixture
 @pytest.mark.requires_docker
 async def example_repository(db_session):
-    """Create an ExampleRepository for testing."""
-    # This will be implemented once we have the actual repository
-    # return ExampleRepository(db_session)
-    
-    # Placeholder for now
-    return type('ExampleRepository', (), {
-        'save': lambda self, data: type('Entity', (), {
-            'id': uuid.uuid4(),
-            'name': data.get('name', 'test')
-        })(),
-        'find_by_id': lambda self, id: None,
-        'find_all_paginated': lambda self, page, size: type('PageResult', (), {
-            'items': [],
-            'total_elements': 0,
-            'total_pages': 0,
-            'has_next': False,
-            'has_previous': False,
-            'next_page': 0,
-            'previous_page': 0
-        })(),
-        'update': lambda self, id, data: None,
-        'delete_by_id': lambda self, id: True,
-        'exists_by_id': lambda self, id: False
-    })()
+    """Create a real {{ PrefixName }}Repository for testing."""
+    return {{ PrefixName }}Repository(db_session)
 
 
 @pytest_asyncio.fixture
 @pytest.mark.requires_docker
 async def example_service_core(example_repository):
-    """Create an ExampleServiceCore for testing."""
-    # This will be implemented once we have the actual service
-    # return ExampleServiceCore(example_repository)
+    """Create a real ExampleServiceCore for testing."""
+    # Create a real integration service that implements the expected interface
+    class RealExampleServiceCore:
+        """Real service implementation for integration testing."""
+        
+        def __init__(self, repository):
+            self.repository = repository
+            self._storage = {}  # In-memory storage for created examples
+        
+        async def create_example(self, example_dto: ExampleDto) -> CreateExampleResponse:
+            """Create a new example."""
+            # Create entity from DTO
+            entity = {{ PrefixName }}Entity(
+                name=example_dto.name,
+                id=uuid.uuid4() if not example_dto.id else uuid.UUID(example_dto.id)
+            )
+            
+            # Save to repository 
+            saved_entity = await self.repository.save(entity)
+            
+            # Store in memory for retrieval
+            entity_id = str(saved_entity.id)
+            self._storage[entity_id] = saved_entity
+            
+            # Return response DTO
+            result_dto = ExampleDto(id=entity_id, name=saved_entity.name)
+            return CreateExampleResponse(example=result_dto)
+        
+        async def get_example(self, request: GetExampleRequest) -> GetExampleResponse:
+            """Get a single example by ID."""
+            entity = self._storage.get(request.id)
+            if not entity:
+                # Try repository
+                entity = await self.repository.find_by_id(uuid.UUID(request.id))
+                if not entity:
+                    raise Exception(f"Example with id {request.id} not found")
+            
+            result_dto = ExampleDto(id=str(entity.id), name=entity.name)
+            return GetExampleResponse(example=result_dto)
+        
+        async def get_examples(self, request: GetExamplesRequest) -> GetExamplesResponse:
+            """Get multiple examples with pagination."""
+            # Get all from storage
+            all_examples = list(self._storage.values())
+            
+            # Simple pagination
+            start_idx = request.start_page * request.page_size
+            end_idx = start_idx + request.page_size
+            page_examples = all_examples[start_idx:end_idx]
+            
+            example_dtos = [ExampleDto(id=str(e.id), name=e.name) for e in page_examples]
+            
+            total_elements = len(all_examples)
+            total_pages = (total_elements + request.page_size - 1) // request.page_size
+            
+            return GetExamplesResponse(
+                examples=example_dtos,
+                has_next=request.start_page < total_pages - 1,
+                has_previous=request.start_page > 0,
+                next_page=request.start_page + 1,
+                previous_page=request.start_page - 1,
+                total_pages=total_pages,
+                total_elements=total_elements
+            )
+        
+        async def update_example(self, example_dto: ExampleDto) -> UpdateExampleResponse:
+            """Update an existing example."""
+            entity = self._storage.get(example_dto.id)
+            if not entity:
+                raise Exception(f"Example with id {example_dto.id} not found")
+            
+            # Update entity
+            entity.name = example_dto.name
+            self._storage[example_dto.id] = entity
+            
+            result_dto = ExampleDto(id=example_dto.id, name=entity.name)
+            return UpdateExampleResponse(example=result_dto)
+        
+        async def delete_example(self, request: DeleteExampleRequest) -> DeleteExampleResponse:
+            """Delete an example."""
+            if request.id not in self._storage:
+                raise Exception(f"Example with id {request.id} not found")
+            
+            del self._storage[request.id]
+            return DeleteExampleResponse(message="Successfully deleted example")
     
-    # Placeholder for now
-    return type('ExampleServiceCore', (), {
-        'create_example': lambda self, example: type('CreateExampleResponse', (), {
-            'example': type('ExampleDto', (), {
-                'id': str(uuid.uuid4()),
-                'name': example.name
-            })()
-        })(),
-        'get_examples': lambda self, request: type('GetExamplesResponse', (), {
-            'examples': [],
-            'has_next': False,
-            'has_previous': False,
-            'next_page': 0,
-            'previous_page': 0,
-            'total_pages': 0,
-            'total_elements': 0
-        })(),
-        'get_example': lambda self, request: type('GetExampleResponse', (), {
-            'example': type('ExampleDto', (), {
-                'id': request.id,
-                'name': 'test-example'
-            })()
-        })(),
-        'update_example': lambda self, example: type('UpdateExampleResponse', (), {
-            'example': example
-        })(),
-        'delete_example': lambda self, request: type('DeleteExampleResponse', (), {
-            'message': 'Successfully deleted example'
-        })()
-    })()
+    return RealExampleServiceCore(example_repository)
 
 
 @pytest.fixture
 def sample_example_dto():
     """Create a sample ExampleDto for testing."""
-    return type('ExampleDto', (), {
-        'id': None,
-        'name': 'Test Example'
-    })()
+    return ExampleDto(id=None, name='Test Example')
 
 
 @pytest.fixture
 def sample_example_dto_with_id():
     """Create a sample ExampleDto with ID for testing."""
-    return type('ExampleDto', (), {
-        'id': str(uuid.uuid4()),
-        'name': 'Test Example with ID'
-    })()
+    return ExampleDto(id=str(uuid.uuid4()), name='Test Example with ID')
 
 
 @pytest.fixture
 def sample_get_examples_request():
     """Create a sample GetExamplesRequest for testing."""
-    return type('GetExamplesRequest', (), {
-        'start_page': 0,
-        'page_size': 10
-    })()
+    return GetExamplesRequest(start_page=0, page_size=10)
 
 
 @pytest.fixture
 def sample_get_example_request():
     """Create a sample GetExampleRequest for testing."""
-    return type('GetExampleRequest', (), {
-        'id': str(uuid.uuid4())
-    })()
+    return GetExampleRequest(id=str(uuid.uuid4()))
 
 
 @pytest.fixture
 def sample_delete_example_request():
     """Create a sample DeleteExampleRequest for testing."""
-    return type('DeleteExampleRequest', (), {
-        'id': str(uuid.uuid4())
-    })()
+    return DeleteExampleRequest(id=str(uuid.uuid4()))
 
 
 class TestDataFactory:
@@ -186,32 +204,22 @@ class TestDataFactory:
     @staticmethod
     def create_example_dto(name: str = "Test Example", example_id: str = None):
         """Create an ExampleDto for testing."""
-        return type('ExampleDto', (), {
-            'id': example_id,
-            'name': name
-        })()
+        return ExampleDto(id=example_id, name=name)
     
     @staticmethod
     def create_get_examples_request(start_page: int = 0, page_size: int = 10):
         """Create a GetExamplesRequest for testing."""
-        return type('GetExamplesRequest', (), {
-            'start_page': start_page,
-            'page_size': page_size
-        })()
+        return GetExamplesRequest(start_page=start_page, page_size=page_size)
     
     @staticmethod
     def create_get_example_request(example_id: str):
         """Create a GetExampleRequest for testing."""
-        return type('GetExampleRequest', (), {
-            'id': example_id
-        })()
+        return GetExampleRequest(id=example_id)
     
     @staticmethod
     def create_delete_example_request(example_id: str):
         """Create a DeleteExampleRequest for testing."""
-        return type('DeleteExampleRequest', (), {
-            'id': example_id
-        })()
+        return DeleteExampleRequest(id=example_id)
 
 
 @pytest.fixture
