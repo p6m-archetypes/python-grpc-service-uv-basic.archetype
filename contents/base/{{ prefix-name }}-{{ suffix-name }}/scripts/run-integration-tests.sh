@@ -140,7 +140,7 @@ build_packages() {
     uv sync --all-extras
     
     # Install each sub-package with dependencies  
-    for package in test-service-proto test-service-persistence test-service-api test-service-core test-service-client test-service-server test-service-integration-tests; do
+    for package in {{ prefix-name }}-{{ suffix-name }}-proto {{ prefix-name }}-{{ suffix-name }}-persistence {{ prefix-name }}-{{ suffix-name }}-api {{ prefix-name }}-{{ suffix-name }}-core {{ prefix-name }}-{{ suffix-name }}-client {{ prefix-name }}-{{ suffix-name }}-server {{ prefix-name }}-{{ suffix-name }}-integration-tests; do
         print_status "Installing $package dependencies..."
         cd "$package"
         uv sync --all-extras
