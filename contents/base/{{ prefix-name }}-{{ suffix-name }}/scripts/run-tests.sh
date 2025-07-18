@@ -24,21 +24,11 @@ else
     # Ensure we're in the project root
     cd "$(dirname "$0")/.."
     
-    # Check if Python virtual environment exists
-    if [[ ! -d ".venv" ]]; then
-        echo "📦 Creating virtual environment..."
-        python -m venv .venv
-    fi
-    
-    # Activate virtual environment
-    source .venv/bin/activate
-    
     # Install dependencies if needed
-    if [[ ! -f ".venv/installed" ]]; then
+    if [[ ! -f ".uv-installed" ]]; then
         echo "📥 Installing dependencies..."
-        pip install poetry
-        poetry install
-        touch .venv/installed
+        uv sync --all-extras
+        touch .uv-installed
     fi
     
     # Set test environment variables
@@ -68,17 +58,17 @@ else
         unit)
             echo "🔬 Running unit tests..."
             cd {{ prefix-name }}-{{ suffix-name }}-integration-tests
-            poetry run pytest tests/unit/ -v --cov=tests
+            uv run pytest tests/unit/ -v --cov=tests
             ;;
         integration)
             echo "🔧 Running integration tests..."
             cd {{ prefix-name }}-{{ suffix-name }}-integration-tests
-            poetry run pytest tests/integration/ -v --cov=tests -m "requires_docker"
+            uv run pytest tests/integration/ -v --cov=tests -m "requires_docker"
             ;;
         all)
             echo "🚀 Running all tests..."
             cd {{ prefix-name }}-{{ suffix-name }}-integration-tests
-            poetry run pytest tests/ -v --cov=tests
+            uv run pytest tests/ -v --cov=tests
             ;;
         *)
             echo "❌ Unknown test suite: $1"
