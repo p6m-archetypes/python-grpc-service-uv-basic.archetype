@@ -45,11 +45,11 @@ my-awesome-service/
 
 ```bash
 # Generate a new service
-archetect generate https://github.com/p6m-archetypes/python-grpc-service-uv-basic.archetype.git my-new-service
+archetect render https://github.com/p6m-archetypes/python-grpc-service-uv-basic.archetype.git#v1
 
 # Answer the prompts:
 # org-name: myorg
-# solution-name: myproject  
+# solution-name: myproject
 # prefix-name: awesome
 # suffix-name: service
 
@@ -81,12 +81,14 @@ docker-compose up -d
 ## ✨ Key Features
 
 ### 🏛️ Enterprise Architecture
+
 - **Hexagonal Architecture**: Clean separation of concerns
 - **Modular Design**: Independent, reusable packages
 - **Dependency Injection**: Proper service layer organization
 - **Error Handling**: Structured exception management
 
 ### 🔧 Modern Python Ecosystem
+
 - **UV Package Manager**: Fast, reliable dependency management
 - **Python 3.11+**: Modern language features and performance
 - **gRPC 1.71.0**: Latest gRPC with reflection and health checking
@@ -95,12 +97,14 @@ docker-compose up -d
 - **Structured Logging**: JSON-structured logs with contextual information
 
 ### 📊 Production Monitoring
+
 - **Prometheus Metrics**: Business and technical metrics
 - **Grafana Dashboards**: Pre-configured service monitoring
 - **Health Checks**: Comprehensive service health reporting
 - **OpenTelemetry**: Distributed tracing and observability
 
 ### 🧪 Testing Excellence
+
 - **pytest Framework**: Modern testing with async support
 - **TestContainers**: Isolated integration testing
 - **gRPC Testing**: Comprehensive gRPC connectivity validation
@@ -108,6 +112,7 @@ docker-compose up -d
 - **CI Integration**: Automated testing in GitHub Actions
 
 ### 🚢 Production Ready
+
 - **Multi-stage Dockerfile**: Optimized container builds
 - **Docker Compose**: Complete development environment
 - **Database Migrations**: Alembic-powered schema management
@@ -119,11 +124,12 @@ docker-compose up -d
 This archetype includes a comprehensive validation suite that ensures generated services meet production standards:
 
 - **✅ 0 manual fixes required** - Services work immediately after generation
-- **✅ <2 minutes from generation to running service** - Fast development cycle  
+- **✅ <2 minutes from generation to running service** - Fast development cycle
 - **✅ 100% integration test pass rate** - Reliable, tested code
 - **✅ Template validation** - No hardcoded values remain
 
 Run the validation suite:
+
 ```bash
 ./validate_archetype.sh
 ```
@@ -133,6 +139,7 @@ Run the validation suite:
 This archetype has been extensively updated and tested:
 
 ### Fixed Issues ✅
+
 1. **Package Configuration Modernization** - Updated all pyproject.toml files to modern standards
 2. **gRPC Version Consistency** - Pinned gRPC to 1.71.0 across all packages
 3. **Python Package Structure** - Fixed namespace organization and import paths
@@ -145,6 +152,7 @@ This archetype has been extensively updated and tested:
 10. **Template Validation** - Created comprehensive validation tools
 
 ### Verification ✅
+
 - **Comprehensive test suite** validates all success criteria
 - **Reference implementation** comparison ensures correctness
 - **Integration testing** covers all service components
