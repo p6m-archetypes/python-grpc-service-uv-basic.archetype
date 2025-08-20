@@ -7,7 +7,7 @@ permissions: write-all
 name: Build
 
 env:
-  DOCKER_REGISTRY: ${{ vars.ARTIFACTORY_HOSTNAME }}
+  DOCKER_REGISTRY: ${{'{'}}{ vars.ARTIFACTORY_HOSTNAME }}
   DOCKER_REPOSITORY: {{ org-name }}-{{ solution-name }}-docker-local/applications
   IMAGE_NAME: {{ prefix-name }}-{{ suffix-name }}
 
@@ -51,12 +51,12 @@ jobs:
       - name: Verify Registry Access
         run: |
           echo "Testing registry access..."
-          echo "Registry: ${{ env.DOCKER_REGISTRY }}"
-          echo "Repository: ${{ env.DOCKER_REPOSITORY }}"
-          echo "Full path: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPOSITORY }}"
+          echo "Registry: ${{'{'}}{ env.DOCKER_REGISTRY }}"
+          echo "Repository: ${{'{'}}{ env.DOCKER_REPOSITORY }}"
+          echo "Full path: ${{'{'}}{ env.DOCKER_REGISTRY }}/${{'{'}}{ env.DOCKER_REPOSITORY }}"
 
           # Test if we can access the registry
-          if docker manifest inspect ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPOSITORY }}/${{ env.IMAGE_NAME }}:latest >/dev/null 2>&1; then
+          if docker manifest inspect ${{'{'}}{ env.DOCKER_REGISTRY }}/${{'{'}}{ env.DOCKER_REPOSITORY }}/${{'{'}}{ env.IMAGE_NAME }}:latest >/dev/null 2>&1; then
             echo "✅ Registry access verified - repository exists and is accessible"
           else
             echo "⚠️  Repository might not exist yet - this is normal for new projects"
@@ -82,14 +82,14 @@ jobs:
           echo "p6m action failed, trying standard Docker build..."
 
           # Build the image
-          docker build -t ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
+          docker build -t ${{'{'}}{ env.DOCKER_REGISTRY }}/${{'{'}}{ env.DOCKER_REPOSITORY }}/${{'{'}}{ env.IMAGE_NAME }}:${{'{'}}{ github.sha }} .
 
           # Tag as latest
-          docker tag ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPOSITORY }}/${{ env.IMAGE_NAME }}:latest
+          docker tag ${{'{'}}{ env.DOCKER_REGISTRY }}/${{'{'}}{ env.DOCKER_REPOSITORY }}/${{'{'}}{ env.IMAGE_NAME }}:${{'{'}}{ github.sha }} ${{'{'}}{ env.DOCKER_REGISTRY }}/${{'{'}}{ env.DOCKER_REPOSITORY }}/${{'{'}}{ env.IMAGE_NAME }}:latest
 
           # Push the image
-          docker push ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          docker push ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPOSITORY }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{'{'}}{ env.DOCKER_REGISTRY }}/${{'{'}}{ env.DOCKER_REPOSITORY }}/${{'{'}}{ env.IMAGE_NAME }}:${{'{'}}{ github.sha }}
+          docker push ${{'{'}}{ env.DOCKER_REGISTRY }}/${{'{'}}{ env.DOCKER_REPOSITORY }}/${{'{'}}{ env.IMAGE_NAME }}:latest
 
           echo "✅ Fallback Docker build completed successfully"
         env:
