@@ -9,7 +9,7 @@ name: Build
 env:
   DOCKER_REGISTRY: ${{ vars.ARTIFACTORY_HOSTNAME }}
   DOCKER_REPOSITORY: {{ org-name }}-{{ solution-name }}-docker-local/applications
-  IMAGE_NAME: {{ prefix-name }}-{{ suffix-name }}-server
+  IMAGE_NAME: {{ prefix-name }}-{{ suffix-name }}
 
 jobs:
   build_and_deploy:
