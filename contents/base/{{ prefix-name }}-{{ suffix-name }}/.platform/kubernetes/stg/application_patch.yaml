@@ -1,0 +1,11 @@
+apiVersion: meta.p6m.dev/v1alpha1
+kind: PlatformApplication
+metadata:
+  name: {{ prefix-name }}-{{ suffix-name }}
+spec:
+  config: {}
+  networking:
+    ingress:
+      enabled: true
+      hostnames:
+        - {{ prefix-name }}-{{ suffix-name }}.aks.eastus.azure.stg.{{ org-name }}.p6m.run
