@@ -51,11 +51,12 @@ jobs:
 
       - name: Build and Publish Docker Image
         id: docker-publish
-        uses: p6m-actions/python-uv-docker-publish@v1
+        uses: p6m-actions/python-uv-docker-publish@YP6M-769-add-missing-run-action-to-python-uv-docker-publish
         with:
-          image-name: {{ prefix-name }}-{{ suffix-name }}-server
-          image-tag: ${{'{'}}{ github.sha }}
-          registry: {{ org-name }}-{{ solution-name }}-docker-local/applications
+          image-name: keycloak-bootstrap-api-server
+          image-tag: ${{ github.sha }}
+          registry: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPOSITORY }}
+          platforms: linux/amd64,linux/arm64
           push: true
         env:
           DOCKER_BUILDKIT: 1
