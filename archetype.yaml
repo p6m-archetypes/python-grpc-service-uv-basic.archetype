@@ -1,9 +1,9 @@
 ---
-description: "python-grpc-service-uv"
-authors: ["Jimmie Fulton <jimmie.fulton@gmail.com>"]
-languages: []
-frameworks: []
-tags: []
+description: "Python GraphQL Service with FastAPI, UV, and Modern Tooling"
+authors: ["Ybor Technology"]
+languages: ["Python"]
+frameworks: ["FastAPI", "SQLAlchemy", "Pydantic", "Pytest"]
+tags: ["GraphQL", "Service", "Microservice", "API", "FastAPI"]
 
 requires:
   archetect: "2.0.5"
