@@ -119,6 +119,36 @@ docker-compose up -d
 - **Security**: JWT authentication and rate limiting middleware
 - **Performance**: Connection pooling and async operations
 
+## 🎯 Use Cases
+
+This archetype is ideal for:
+
+1. **Internal Microservices**: High-performance service-to-service communication within a service mesh
+   - Federated by GraphQL or REST gateways for frontend consumption
+   - Direct gRPC client communication from other backend services
+   - Not typically exposed directly to frontend applications
+
+2. **Platform Services**: Core domain services (products, users, orders, inventory)
+   - Strong typing with Protocol Buffers ensures API contracts
+   - Client libraries published for consumption by other services
+   - Often aggregated by GraphQL domain gateways for unified APIs
+
+3. **Data-Intensive Services**: Services requiring high throughput and low latency
+   - Efficient binary serialization with Protocol Buffers
+   - Async/await support for high concurrency
+   - Streaming support for real-time data pipelines
+
+4. **Python-First Architectures**: When Python's ecosystem is the primary choice
+   - Modern Python tooling with UV for fast dependency management
+   - Integration with Python data science and ML libraries
+   - Async support with modern Python 3.11+ features
+
+**Architectural Note**: gRPC services are typically internal and consumed by:
+- GraphQL gateways (federation/BFF pattern)
+- REST gateways (HTTP-to-gRPC proxy)
+- Other gRPC services (direct service-to-service)
+- Backend applications requiring high performance
+
 ## 📋 Validation & Quality
 
 This archetype includes a comprehensive validation suite that ensures generated services meet production standards:
