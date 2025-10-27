@@ -64,19 +64,19 @@ jobs:
 
       - name: Make Artifacts
         run: |
-          echo '${{ steps.docker-publish.outputs.image-digest }}' | tee digest.txt
+          echo '${{'{'}}{ steps.docker-publish.outputs.image-digest }}' | tee digest.txt
 
       - uses: ncipollo/release-action@v1
         with:
-          name: Version ${{ steps.cut-patch.outputs.version }}
-          tag: ${{ steps.cut-patch.outputs.tag }}
+          name: Version ${{'{'}}{ steps.cut-patch.outputs.version }}
+          tag: ${{'{'}}{ steps.cut-patch.outputs.tag }}
           makeLatest: true
           artifacts: "digest.txt"
           removeArtifacts: true
           generateReleaseNotes: true
           body: |
-            Application version: `${{ steps.cut-patch.outputs.version }}`
-            Docker image digest: `${{ steps.docker-publish.outputs.image-digest }}`
+            Application version: `${{'{'}}{ steps.cut-patch.outputs.version }}`
+            Docker image digest: `${{'{'}}{ steps.docker-publish.outputs.image-digest }}`
 
       - name: Update Application Manifest
         uses: p6m-actions/platform-application-manifest-dispatch@v1
