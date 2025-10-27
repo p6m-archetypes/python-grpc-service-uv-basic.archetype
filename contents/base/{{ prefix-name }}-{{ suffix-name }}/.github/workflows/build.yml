@@ -8,7 +8,7 @@ name: Build
 
 env:
   DOCKER_REGISTRY: ${{'{'}}{ vars.ARTIFACTORY_HOSTNAME }}
-  DOCKER_REPOSITORY: {{ org-name }}-{{ solution-name }}-docker-local/applications
+  DOCKER_REPOSITORY: ${{'{'}}{ vars.ARTIFACTORY_PROJECT }}-docker-local/applications
   IMAGE_NAME: {{ prefix-name }}-{{ suffix-name }}
 
 jobs:
@@ -51,7 +51,7 @@ jobs:
 
       - name: Build and Publish Docker Image
         id: docker-publish
-        uses: p6m-actions/python-uv-docker-publish@YP6M-769-add-missing-run-action-to-python-uv-docker-publish
+        uses: p6m-actions/python-uv-docker-publish@v1
         with:
           image-name: {{ prefix-name }}-{{ suffix-name }}-server
           image-tag: ${{'{'}}{ github.sha }}
@@ -62,6 +62,21 @@ jobs:
           DOCKER_BUILDKIT: 1
           DOCKER_CLI_EXPERIMENTAL: enabled
 
+      - name: Make Artifacts
+        run: |
+          echo '${{ steps.docker-publish.outputs.image-digest }}' | tee digest.txt
+
+      - uses: ncipollo/release-action@v1
+        with:
+          name: Version ${{ steps.cut-patch.outputs.version }}
+          tag: ${{ steps.cut-patch.outputs.tag }}
+          makeLatest: true
+          artifacts: "digest.txt"
+          removeArtifacts: true
+          generateReleaseNotes: true
+          body: |
+            Application version: `${{ steps.cut-patch.outputs.version }}`
+            Docker image digest: `${{ steps.docker-publish.outputs.image-digest }}`
 
       - name: Update Application Manifest
         uses: p6m-actions/platform-application-manifest-dispatch@v1

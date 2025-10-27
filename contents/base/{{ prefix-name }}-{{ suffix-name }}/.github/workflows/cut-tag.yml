@@ -60,7 +60,8 @@ jobs:
         with:
           image-name: {{ prefix-name }}-{{ suffix-name }}-server
           image-tag: ${{'{'}}{ steps.cut-tag.outputs.version }}
-          registry: {{ org-name }}-{{ solution-name }}-docker-local/applications
+          registry: ${{'{'}}{ vars.ARTIFACTORY_HOSTNAME }}/${{'{'}}{ vars.ARTIFACTORY_PROJECT }}-docker-local/applications
+          platforms: linux/amd64,linux/arm64
           push: true
           version: ${{'{'}}{ steps.cut-tag.outputs.version }}
 
@@ -69,6 +70,22 @@ jobs:
         with:
           modules: "{{ prefix-name }}-{{ suffix-name }}-proto {{ prefix-name }}-{{ suffix-name }}-api {{ prefix-name }}-{{ suffix-name }}-core {{ prefix-name }}-{{ suffix-name }}-persistence {{ prefix-name }}-{{ suffix-name }}-server {{ prefix-name }}-{{ suffix-name }}-client"
           repository: artifactory
+      
+      - name: Make Artifacts
+        run: |
+          echo '${{ steps.docker-publish.outputs.image-digest }}' | tee digest.txt
+
+      - uses: ncipollo/release-action@v1
+        with:
+          name: Version ${{ steps.cut-tag.outputs.version }}
+          tag: ${{ steps.cut-tag.outputs.tag }}
+          makeLatest: true
+          artifacts: "digest.txt"
+          removeArtifacts: true
+          generateReleaseNotes: true
+          body: |
+            Application version: `${{ steps.cut-tag.outputs.version }}`
+            Docker image digest: `${{ steps.docker-publish.outputs.image-digest }}`
 
       - name: Update Application Manifest
         uses: p6m-actions/platform-application-manifest-dispatch@v1
