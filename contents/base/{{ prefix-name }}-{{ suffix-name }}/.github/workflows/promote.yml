@@ -42,7 +42,7 @@ jobs:
         uses: p6m-actions/platform-application-manifest-dispatch@v1
         with:
           repository: ${{'{'}}{ github.repository }}
-          image-name: ${{'{'}}{ env.GITHUB_REPOSITORY_BASENAME }}
+          image-name: {{ prefix-name }}-{{ suffix-name }}
           directory-name: ${{'{'}}{ env.GITHUB_REPOSITORY_BASENAME }}
           environment: ${{'{'}}{ inputs.environment }}
           digest: ${{'{'}}{ env.DIGEST_TO_PROMOTE }}
