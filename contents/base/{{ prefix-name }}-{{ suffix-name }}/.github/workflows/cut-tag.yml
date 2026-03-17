@@ -33,7 +33,7 @@ jobs:
         uses: p6m-actions/python-uv-repository-login@v1
         with:
           credentials: |
-            artifactory=${{'{'}}{ secrets.ARTIFACTORY_USERNAME }}:${{'{'}}{ secrets.ARTIFACTORY_IDENTITY_TOKEN }}
+            artifactory=${{'{'}}{ secrets.P6M_ARTIFACTORY_USERNAME }}:${{'{'}}{ secrets.P6M_ARTIFACTORY_IDENTITY_TOKEN }}
 
       - name: Cut Tag
         id: cut-tag
@@ -51,8 +51,8 @@ jobs:
       - name: Login to Docker Repository
         uses: p6m-actions/docker-repository-login@v1
         with:
-          username: ${{'{'}}{ secrets.ARTIFACTORY_USERNAME }}
-          password: ${{'{'}}{ secrets.ARTIFACTORY_IDENTITY_TOKEN }}
+          username: ${{'{'}}{ secrets.P6M_ARTIFACTORY_USERNAME }}
+          password: ${{'{'}}{ secrets.P6M_ARTIFACTORY_IDENTITY_TOKEN }}
 
       - name: Build and Publish Docker Image
         id: docker-publish
@@ -60,7 +60,7 @@ jobs:
         with:
           image-name: {{ prefix-name }}-{{ suffix-name }}-server
           image-tag: ${{'{'}}{ steps.cut-tag.outputs.version }}
-          registry: ${{'{'}}{ vars.ARTIFACTORY_HOSTNAME }}/${{'{'}}{ vars.ARTIFACTORY_PROJECT }}-docker-local/applications
+          registry: ${{'{'}}{ vars.P6M_ARTIFACTORY_HOSTNAME }}/${{'{'}}{ vars.P6M_ARTIFACTORY_PROJECT }}-docker-local/applications
           platforms: linux/amd64,linux/arm64
           push: true
           version: ${{'{'}}{ steps.cut-tag.outputs.version }}
@@ -94,6 +94,6 @@ jobs:
           image-name: {{ prefix-name }}-{{ suffix-name }}
           environment: "prd"
           digest: ${{'{'}}{ steps.docker-publish.outputs.image-digest }}
-          update-manifest-token: ${{'{'}}{ secrets.UPDATE_MANIFEST_TOKEN }}
-          platform-dispatch-url: ${{'{'}}{ vars.PLATFORM_DISPATCH_URL }}
+          update-manifest-token: ${{'{'}}{ secrets.P6M_UPDATE_MANIFEST_TOKEN }}
+          platform-dispatch-url: ${{'{'}}{ vars.P6M_PLATFORM_DISPATCH_URL }}
           directory-name: {{ prefix-name }}-{{ suffix-name }}
