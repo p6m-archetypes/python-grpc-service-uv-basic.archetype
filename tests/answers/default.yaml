@@ -1,0 +1,10 @@
+# Headless answers for the default test case.
+# Prompt keys come from archetype.rhai (kebab-case). Anything not listed here
+# falls back to prompt defaults via `archetect render -D`.
+# project-name is derived as "{{ prefix-name }}-{{ suffix-name }}", so this
+# renders into an "inventory-service" directory.
+author_full: "Test Author <test@example.com>"
+org-name: "acme"
+solution-name: "widgets"
+prefix-name: "inventory"
+suffix-name: "service"
