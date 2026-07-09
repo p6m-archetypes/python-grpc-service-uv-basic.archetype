@@ -1,0 +1,25 @@
+name: Test Archetype
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    uses: p6m-workflows/archetype-test/.github/workflows/workflow.yml@v1
+    with:
+      harness-ref: main
+      # This archetype uses a Rhai script and requires archetect 2.x (3.x refuses .rhai);
+      # 2.x versions are installed as archetect2, which the harness resolves automatically
+      archetect-version: "2.1.2"
+      # No language toolchain needed: the harness always sets up uv, which is the
+      # generated project's package manager. The build tier pins Python 3.12 itself.
+      toolchain: none
+    secrets: inherit

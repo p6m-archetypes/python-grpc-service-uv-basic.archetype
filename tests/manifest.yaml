@@ -1,0 +1,64 @@
+# Test cases for this archetype. Each case is rendered once per pytest session
+# and shared by all tests that reference it.
+#
+# Fields:
+#   name           unique case id (shows up in test names)
+#   answers        answers file passed to `archetect render -A`, relative to tests/
+#   project_dir    directory the render is expected to produce (derived from the answers)
+#   expected_files paths (relative to project_dir) that must exist after rendering
+#   absent_files   paths (relative to project_dir) that must NOT exist after rendering
+#   requires       executables that must be on PATH for the build tier; missing -> build tests skip
+#   build_steps    commands run sequentially inside project_dir by the build tier
+#   env            extra environment variables for build_steps
+#   yaml_globs     globs (relative to project_dir) of generated files that must parse
+#                  as valid YAML; each glob must match at least one file
+#
+# Note on the build tier: `uv sync` resolves and builds the generated uv
+# workspace (including the gRPC proto codegen in inventory-service-proto). The
+# shipped unit tests are unimplemented scaffolds (undefined fixtures) and the
+# integration tests require Docker/Postgres, so neither is run here - the build
+# tier's job is to prove the generated workspace installs and builds cleanly.
+# Python 3.12 is pinned because psycopg2-binary has no wheels for the newest
+# interpreters, which would otherwise force a from-source build.
+cases:
+  - name: default
+    answers: answers/default.yaml
+    project_dir: inventory-service
+    expected_files:
+      - pyproject.toml
+      - uv.lock
+      - README.md
+      - Dockerfile
+      - docker-compose.yml
+      - inventory-service-api/pyproject.toml
+      - inventory-service-client/pyproject.toml
+      - inventory-service-core/pyproject.toml
+      - inventory-service-persistence/pyproject.toml
+      - inventory-service-proto/pyproject.toml
+      - inventory-service-proto/src/acme/widgets/inventory/service/grpc/inventory_service.proto
+      - inventory-service-server/pyproject.toml
+      - inventory-service-server/src/acme/widgets/inventory/service/server/main.py
+      - inventory-service-integration-tests/pyproject.toml
+      - inventory-service-integration-tests/tests/unit/test_example_service_core.py
+      - inventory-service-integration-tests/tests/integration/test_grpc_connectivity.py
+      - .github/workflows/build.yml
+      - .github/workflows/cut-tag.yml
+      - .github/workflows/promote.yml
+      - .github/workflows/integration-tests.yml
+      - .platform/kubernetes/base/application.yaml
+      - .platform/kubernetes/base/kustomization.yaml
+      - .platform/kubernetes/dev/kustomization.yaml
+      - .platform/kubernetes/stg/kustomization.yaml
+      - .platform/kubernetes/prd/kustomization.yaml
+      - .gitignore
+    yaml_globs:
+      - ".platform/kubernetes/**/*.yaml"
+      - ".github/workflows/*.yml"
+      - "docker-compose.yml"
+    requires:
+      - uv
+    build_steps:
+      - [uv, sync, --python, "3.12"]
+    env:
+      # Keep uv from touching the developer's real cache/config in odd CI setups.
+      UV_NO_PROGRESS: "1"
